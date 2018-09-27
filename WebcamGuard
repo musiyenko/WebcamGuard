@@ -1,0 +1,28 @@
+#!/usr/bin/env bash                                                 
+# A script to take webcam photos on wake up and send them via email #
+# This project on GitHub: https://github.com/musiyenko/WebcamGuard  #
+# My website: www.musiyenko.com                                     #
+#####################################################################
+
+# settings
+INFO="$(echo WebcamGuard@${HOSTNAME})" # Sets the info text
+NUM=3 # Number of photos to take
+DELAY=3 # Delay
+
+# main
+case $1/$2 in
+  pre/*)
+    exit 0
+    ;;
+  post/*)
+    sudo systemctl restart NetworkManager.service
+
+    for i in `seq 1 $NUM`; do
+	    fswebcam -q --title $INFO --jpeg 100 -D $DELAY --save /opt/WebcamGuard/pic%Y-%m-%d_%H:%M:%S.jpg
+	    let DELAY+=3
+    done
+
+    python /opt/WebcamGuard/sendEmail.py
+    mv /opt/WebcamGuard/*.jpg /opt/WebcamGuard/archive
+    ;;
+esac
